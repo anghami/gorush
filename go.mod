@@ -15,6 +15,7 @@ require (
 	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23
 	github.com/dgraph-io/badger v1.5.5
 	github.com/gin-gonic/gin v1.4.0
+	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/golang/protobuf v1.3.1
 	github.com/mattn/go-isatty v0.0.8
 	github.com/mitchellh/mapstructure v1.1.2
@@ -40,3 +41,5 @@ require (
 	google.golang.org/grpc v1.21.1
 	gopkg.in/redis.v5 v5.2.9
 )
+
+replace github.com/appleboy/go-fcm => github.com/anghami/go-fcm v0.1.5-0.20200115201513-15343700f66f
