@@ -1,0 +1,16 @@
+
+preview:
+  image:
+    repository:
+    previewtag:
+    pullPolicy: Always
+
+  virtualService:
+    enabled: true
+    gateways:
+    - private-gateway.prod
+
+    basedomain: "office.angha.me"
+
+  autoscaler:
+    enabled: false
