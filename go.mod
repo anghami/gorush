@@ -56,3 +56,9 @@ require (
 	gopkg.in/redis.v5 v5.2.9
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 )
+
+
+replace github.com/appleboy/go-fcm => github.com/anghami/go-fcm v0.1.5-0.20200116161218-d4732556ac44
+
+replace github.com/appleboy/gorush => github.com/anghami/gorush v1.11.3-0.20200115203351-b36c309a0aa2
+
