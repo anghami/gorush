@@ -24,7 +24,7 @@ RUN go mod download
 
 # Build the binary
 COPY . .
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags 'sqlite' -ldflags '-s -w -X 'main.Version=v1.11.2-19-gb34edc8'' -o /go/bin/app 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags 'sqlite' -ldflags '-s -w -X 'main.Version=v1.11.2-19-gb34edc8'' -o /go/bin/app 
 
 RUN go test ./... -v 
 ############################
