@@ -60,25 +60,35 @@ func GetAndroidNotification(req PushNotification) *fcm.Message {
 		}
 	}
 
-	notification.Notification = req.Notification
-
+	n := &fcm.Notification{}
+	isNotificationSet := false
 	if req.Notification != nil {
-		// Set request message if body is empty
-		if len(req.Message) > 0 {
-			notification.Notification.Body = req.Message
-		}
+		isNotificationSet = true
+		n = req.Notification
+	}
 
-		if len(req.Title) > 0 {
-			notification.Notification.Title = req.Title
-		}
+	if len(req.Message) > 0 {
+		isNotificationSet = true
+		n.Body = req.Message
+	}
 
-		if len(req.Image) > 0 {
-			notification.Notification.Image = req.Image
-		}
+	if len(req.Title) > 0 {
+		isNotificationSet = true
+		n.Title = req.Title
+	}
 
-		if v, ok := req.Sound.(string); ok && len(v) > 0 {
-			notification.Notification.Sound = v
-		}
+	if len(req.Image) > 0 {
+		isNotificationSet = true
+		n.Image = req.Image
+	}
+
+	if v, ok := req.Sound.(string); ok && len(v) > 0 {
+		isNotificationSet = true
+		n.Sound = v
+	}
+
+	if isNotificationSet {
+		notification.Notification = n
 	}
 
 	// handle iOS apns in fcm
@@ -160,12 +170,12 @@ Retry:
 			if PushConf.Core.Sync {
 				req.AddLog(getLogPushEntry(FailedPush, to, req, result.Error))
 			} else if PushConf.Core.FeedbackURL != "" {
-				go func(logger *logrus.Logger, log LogPushEntry, url string) {
-					err := DispatchFeedback(log, url)
+				go func(logger *logrus.Logger, log LogPushEntry, url string, timeout int64) {
+					err := DispatchFeedback(log, url, timeout)
 					if err != nil {
 						logger.Error(err)
 					}
-				}(LogError, getLogPushEntry(FailedPush, to, req, result.Error), PushConf.Core.FeedbackURL)
+				}(LogError, getLogPushEntry(FailedPush, to, req, result.Error), PushConf.Core.FeedbackURL, PushConf.Core.FeedbackTimeout)
 			}
 			continue
 		}

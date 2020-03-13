@@ -14,19 +14,21 @@ var defaultConf = []byte(`
 core:
   enabled: true # enabale httpd server
   address: "" # ip address to bind (default: any)
+  shutdown_timeout: 30 # default is 30 second
   port: "8088" # ignore this port number if auto_tls is enabled (listen 443).
   worker_num: 0 # default worker number is runtime.NumCPU()
   queue_num: 0 # default queue number is 8192
   max_notification: 100
   sync: false # set true if you need get error message from fail push notification in API response.
   feedback_hook_url: "" # set webhook url if you need get error message asynchronously from fail push notification in API response.
+  feedback_timeout: 10 # default is 10 second
   mode: "release"
   ssl: false
   cert_path: "cert.pem"
   key_path: "key.pem"
   cert_base64: ""
   key_base64: ""
-  http_proxy: "" # only working for FCM server
+  http_proxy: ""
   pid:
     enabled: false
     path: "gorush.pid"
@@ -103,6 +105,7 @@ type ConfYaml struct {
 type SectionCore struct {
 	Enabled         bool           `yaml:"enabled"`
 	Address         string         `yaml:"address"`
+	ShutdownTimeout int64          `yaml:"shutdown_timeout"`
 	Port            string         `yaml:"port"`
 	MaxNotification int64          `yaml:"max_notification"`
 	WorkerNum       int64          `yaml:"worker_num"`
@@ -116,6 +119,7 @@ type SectionCore struct {
 	KeyBase64       string         `yaml:"key_base64"`
 	HTTPProxy       string         `yaml:"http_proxy"`
 	FeedbackURL     string         `yaml:"feedback_hook_url"`
+	FeedbackTimeout int64          `yaml:"feedback_timeout"`
 	PID             SectionPID     `yaml:"pid"`
 	AutoTLS         SectionAutoTLS `yaml:"auto_tls"`
 }
@@ -253,12 +257,14 @@ func LoadConf(confPath string) (ConfYaml, error) {
 	// Core
 	conf.Core.Address = viper.GetString("core.address")
 	conf.Core.Port = viper.GetString("core.port")
+	conf.Core.ShutdownTimeout = int64(viper.GetInt("core.shutdown_timeout"))
 	conf.Core.Enabled = viper.GetBool("core.enabled")
 	conf.Core.WorkerNum = int64(viper.GetInt("core.worker_num"))
 	conf.Core.QueueNum = int64(viper.GetInt("core.queue_num"))
 	conf.Core.Mode = viper.GetString("core.mode")
 	conf.Core.Sync = viper.GetBool("core.sync")
 	conf.Core.FeedbackURL = viper.GetString("core.feedback_hook_url")
+	conf.Core.FeedbackTimeout = int64(viper.GetInt("core.feedback_timeout"))
 	conf.Core.SSL = viper.GetBool("core.ssl")
 	conf.Core.CertPath = viper.GetString("core.cert_path")
 	conf.Core.KeyPath = viper.GetString("core.key_path")

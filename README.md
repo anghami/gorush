@@ -70,7 +70,6 @@ A push notification micro server using [Gin](https://github.com/gin-gonic/gin) f
 - Support [YAML](https://github.com/go-yaml/yaml) configuration.
 - Support command line to send single Android or iOS notification.
 - Support Web API to send push notification.
-- Support graceful restart & zero downtime deploy using [facebook grace](https://github.com/facebookgo/grace).
 - Support [HTTP/2](https://http2.github.io/) or HTTP/1.1 protocol.
 - Support notification queue and multiple workers.
 - Support `/api/stat/app` show notification success and failure counts.
@@ -78,12 +77,13 @@ A push notification micro server using [Gin](https://github.com/gin-gonic/gin) f
 - Support store app stat to memory, [Redis](http://redis.io/), [BoltDB](https://github.com/boltdb/bolt), [BuntDB](https://github.com/tidwall/buntdb), [LevelDB](https://github.com/syndtr/goleveldb) or [BadgerDB](https://github.com/dgraph-io/badger).
 - Support `p8`, `p12` or `pem` format of iOS certificate file.
 - Support `/sys/stats` show response time, status code count, etc.
-- Support for HTTP proxy to Google server (FCM).
+- Support for HTTP, HTTPS or SOCKS5 proxy.
 - Support retry send notification if server response is fail.
 - Support expose [prometheus](https://prometheus.io/) metrics.
 - Support install TLS certificates from [Let's Encrypt](https://letsencrypt.org/) automatically.
 - Support send notification through [RPC](https://en.wikipedia.org/wiki/Remote_procedure_call) protocol, we use [gRPC](https://grpc.io/) as default framework.
 - Support running in Docker, [Kubernetes](https://kubernetes.io/) or [AWS Lambda](https://aws.amazon.com/lambda) ([Native Support in Golang](https://aws.amazon.com/blogs/compute/announcing-go-support-for-aws-lambda/))
+- Support graceful shutdown that workers and queue have been sent to APNs/FCM before shutdown service.
 
 See the default [YAML config example](config/config.yml):
 
@@ -92,19 +92,21 @@ See the default [YAML config example](config/config.yml):
 core:
   enabled: true # enabale httpd server
   address: "" # ip address to bind (default: any)
+  shutdown_timeout: 30 # default is 30 second
   port: "8088" # ignore this port number if auto_tls is enabled (listen 443).
   worker_num: 0 # default worker number is runtime.NumCPU()
   queue_num: 0 # default queue number is 8192
   max_notification: 100
   sync: false # set true if you need get error message from fail push notification in API response.
   feedback_hook_url: "" # set a hook url if you need get error message asynchronously from fail push notification in API response.
+  feedback_timeout: 10 # default is 10 second
   mode: "release"
   ssl: false
   cert_path: "cert.pem"
   key_path: "key.pem"
   cert_base64: ""
   key_base64: ""
-  http_proxy: "" # only working for FCM server
+  http_proxy: ""
   pid:
     enabled: false
     path: "gorush.pid"
@@ -255,7 +257,7 @@ Server Options:
     -t, --token <token>              Notification token
     -e, --engine <engine>            Storage engine (memory, redis ...)
     --title <title>                  Notification title
-    --proxy <proxy>                  Proxy URL (only for GCM)
+    --proxy <proxy>                  Proxy URL (support http, https, or socks5)
     --pid <pid path>                 Process identifier path
     --redis-addr <redis addr>        Redis addr (default: localhost:6379)
 iOS Options:
@@ -293,7 +295,7 @@ gorush --android --topic "/topics/foo-bar" \
 - `-t`: Device token.
 - `--title`: Notification title.
 - `--topic`: Send messages to topics. note: don't add device token.
-- `--proxy`: Set http proxy url. (only working for FCM)
+- `--proxy`: Set `http`, `https` or `socks5` proxy url.
 
 ### Send iOS notification
 

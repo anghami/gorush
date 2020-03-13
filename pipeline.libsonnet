@@ -9,7 +9,7 @@
     steps: [
       {
         name: 'vet',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           'make vet',
@@ -23,7 +23,7 @@
       },
       {
         name: 'lint',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           'make lint',
@@ -37,7 +37,7 @@
       },
       {
         name: 'misspell',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           'make misspell-check',
@@ -51,7 +51,7 @@
       },
       {
         name: 'embedmd',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           'make embedmd',
@@ -64,8 +64,26 @@
         ],
       },
       {
+        name: 'hadolint',
+        image: 'hadolint/hadolint:latest-debian',
+        pull: 'always',
+        commands: [
+          'hadolint --version',
+          'hadolint docker/Dockerfile.linux.amd64',
+          'hadolint docker/Dockerfile.linux.arm64',
+          'hadolint docker/Dockerfile.linux.arm',
+          'hadolint docker/Dockerfile.windows.amd64',
+        ],
+        volumes: [
+          {
+            name: 'gopath',
+            path: '/go',
+          },
+        ],
+      },
+      {
         name: 'test',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         environment: {
           ANDROID_API_KEY: { 'from_secret': 'android_api_key' },
@@ -114,7 +132,7 @@
     steps: [
       {
         name: 'build-push',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         environment: {
           CGO_ENABLED: '0',
@@ -128,9 +146,25 @@
           },
         },
       },
+      // {
+      //   name: 'build-push-lambda',
+      //   image: 'golang:1.14',
+      //   pull: 'always',
+      //   environment: {
+      //     CGO_ENABLED: '0',
+      //   },
+      //   commands: [
+      //     'go build -v -tags \'lambda\' -ldflags \'-X main.build=${DRONE_BUILD_NUMBER}\' -a -o release/' + os + '/' + arch + '/lambda/' + name,
+      //   ],
+      //   when: {
+      //     event: {
+      //       exclude: [ 'tag' ],
+      //     },
+      //   },
+      // },
       {
         name: 'build-tag',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         environment: {
           CGO_ENABLED: '0',
@@ -144,7 +178,7 @@
       },
       {
         name: 'executable',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           './release/' + os + '/' + arch + '/' + name + ' --help',
@@ -209,7 +243,7 @@
     steps: [
       {
         name: 'build-all-binary',
-        image: 'golang:1.13',
+        image: 'golang:1.14',
         pull: 'always',
         commands: [
           'make release'

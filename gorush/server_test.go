@@ -1,6 +1,10 @@
 package gorush
 
 import (
+	"context"
+	"crypto/tls"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -22,6 +26,30 @@ func initTest() {
 	PushConf.Core.Mode = "test"
 }
 
+// testRequest is testing url string if server is running
+func testRequest(t *testing.T, url string) {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Timeout:   time.Second * 10,
+		Transport: tr,
+	}
+
+	resp, err := client.Get(url)
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Println("close body err:", err)
+		}
+	}()
+
+	assert.NoError(t, err)
+
+	_, ioerr := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, ioerr)
+	assert.Equal(t, "200 OK", resp.Status, "should get a 200")
+}
+
 func TestPrintGoRushVersion(t *testing.T) {
 	SetVersion("3.0.0")
 	ver := GetVersion()
@@ -36,14 +64,13 @@ func TestRunNormalServer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	go func() {
-		assert.NoError(t, RunHTTPServer())
+		assert.NoError(t, RunHTTPServer(context.Background()))
 	}()
 	// have to wait for the goroutine to start and run the server
 	// otherwise the main thread will complete
 	time.Sleep(5 * time.Millisecond)
 
-	assert.Error(t, RunHTTPServer())
-	gofight.TestRequest(t, "http://localhost:8088/api/stat/go")
+	testRequest(t, "http://localhost:8088/api/stat/go")
 }
 
 func TestRunTLSServer(t *testing.T) {
@@ -55,13 +82,13 @@ func TestRunTLSServer(t *testing.T) {
 	PushConf.Core.KeyPath = "../certificate/localhost.key"
 
 	go func() {
-		assert.NoError(t, RunHTTPServer())
+		assert.NoError(t, RunHTTPServer(context.Background()))
 	}()
 	// have to wait for the goroutine to start and run the server
 	// otherwise the main thread will complete
 	time.Sleep(5 * time.Millisecond)
 
-	gofight.TestRequest(t, "https://localhost:8087/api/stat/go")
+	testRequest(t, "https://localhost:8087/api/stat/go")
 }
 
 func TestRunTLSBase64Server(t *testing.T) {
@@ -77,20 +104,20 @@ func TestRunTLSBase64Server(t *testing.T) {
 	PushConf.Core.KeyBase64 = key
 
 	go func() {
-		assert.NoError(t, RunHTTPServer())
+		assert.NoError(t, RunHTTPServer(context.Background()))
 	}()
 	// have to wait for the goroutine to start and run the server
 	// otherwise the main thread will complete
 	time.Sleep(5 * time.Millisecond)
 
-	gofight.TestRequest(t, "https://localhost:8089/api/stat/go")
+	testRequest(t, "https://localhost:8089/api/stat/go")
 }
 
 func TestRunAutoTLSServer(t *testing.T) {
 	initTest()
 	PushConf.Core.AutoTLS.Enabled = true
 	go func() {
-		assert.NoError(t, RunHTTPServer())
+		assert.NoError(t, RunHTTPServer(context.Background()))
 	}()
 	// have to wait for the goroutine to start and run the server
 	// otherwise the main thread will complete
@@ -105,7 +132,7 @@ func TestLoadTLSCertError(t *testing.T) {
 	PushConf.Core.CertPath = "../config/config.yml"
 	PushConf.Core.KeyPath = "../config/config.yml"
 
-	assert.Error(t, RunHTTPServer())
+	assert.Error(t, RunHTTPServer(context.Background()))
 }
 
 func TestMissingTLSCertConfg(t *testing.T) {
@@ -118,8 +145,8 @@ func TestMissingTLSCertConfg(t *testing.T) {
 	PushConf.Core.CertBase64 = ""
 	PushConf.Core.KeyBase64 = ""
 
-	err := RunHTTPServer()
-	assert.Error(t, RunHTTPServer())
+	err := RunHTTPServer(context.Background())
+	assert.Error(t, RunHTTPServer(context.Background()))
 	assert.Equal(t, "missing https cert config", err.Error())
 }
 
@@ -356,7 +383,7 @@ func TestVersionHandler(t *testing.T) {
 func TestDisabledHTTPServer(t *testing.T) {
 	initTest()
 	PushConf.Core.Enabled = false
-	err := RunHTTPServer()
+	err := RunHTTPServer(context.Background())
 	PushConf.Core.Enabled = true
 
 	assert.Nil(t, err)
