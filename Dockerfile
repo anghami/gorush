@@ -12,21 +12,14 @@ RUN adduser -D -g '' appuser
 WORKDIR $GOPATH/src/mypackage/myapp/
 
 # Use modules to download dependencies, preserves docker cache (unlike go get).
-COPY go.mod .
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
-ARG HTTPS_GIT_CREDS
-RUN git config --global --add url."${HTTPS_GIT_CREDS}/".insteadOf "ssh://git@github.com/"
-RUN git config --global --add url."${HTTPS_GIT_CREDS}/".insteadOf "https://github.com"
-
-RUN go mod download
 
 # Build the binary
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags 'sqlite' -ldflags '-s -w -X 'main.Version=v1.11.2-19-gb34edc8'' -o /go/bin/app 
 
-RUN go test ./... -v 
 ############################
 # STEP 2 build a small image
 ############################
