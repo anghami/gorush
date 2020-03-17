@@ -14,3 +14,11 @@ preview:
 
   autoscaler:
     enabled: false
+
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "1.0"
+      memory: "2.0Gi"

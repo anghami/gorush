@@ -7,6 +7,7 @@ pipeline {
     APP_NAME = 'gorush'
     CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
     DOCKER_REGISTRY_ORG = 'jx'
+    SOURCE_URL = 'https://github.com/anghami/gorush'
   }
   stages {
     stage('Docker Build') {
