@@ -1,0 +1,56 @@
+
+image:
+  repository: 339765050942.dkr.ecr.eu-west-1.amazonaws.com/jx/gorush
+  tag: latest
+  pullPolicy: IfNotPresent 
+
+service:
+  name: gorush
+  portName: http-gorush
+  type: ClusterIP
+  externalPort: 5000
+  internalPort: 5000
+
+# Service default URL is of the form: <app_name>.<basedomain>
+virtualService:
+  enabled: true
+  # Choose a Gateway:
+  #   Internet, public    public-gateway.prod     e.g. staging-gorush.public.angha.me
+  #   Internet, office    private-gateway.prod    e.g. staging-gorush.office.angha.me
+  #   VPC-only (AWS)      internal-gateway.prod   e.g. staging-gorush.internal.angha.me
+  stagingGateway: private-gateway.prod
+  productionGateway: public-gateway.prod
+  # Hostnames used in production.
+  # productionHosts:
+  # - something.anghami.com
+
+autoscaler:
+  enabled: false
+  minReplicas: 6
+  maxReplicas: 18
+  targetCpuAverageUtilization: 70
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "128Mi"
+  limits:
+    cpu: "1.0"
+    memory: "2.0Gi"
+
+serviceMonitor:
+  enabled: false
+
+# env:
+#   SOME_ENV_VAR: some-value
+
+# secrets:
+#   - from: "my-app-credentials" # secret's name in SecretsManager
+#     ## Choose either keyVal or plain, env or file.
+#     keyVal:
+#     - key: "my-db-password"         
+#       env: "MY_DB_PASSWORD"              # put value in env var
+#       # file: "/path/my_private_key.pem" # put value in file
+#     # plain:
+#     #   env: "MY_APP_CREDENTIALS"
+#     #   # file: "/path/my_app_credentials"

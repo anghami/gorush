@@ -1,0 +1,24 @@
+
+preview:
+  image:
+    repository:
+    previewtag:
+    pullPolicy: Always
+
+  virtualService:
+    enabled: true
+    gateways:
+    - private-gateway.prod
+
+    basedomain: "office.angha.me"
+
+  autoscaler:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "1.0"
+      memory: "2.0Gi"
