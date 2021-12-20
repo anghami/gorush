@@ -1,10 +1,9 @@
-{{/* vim: set filetype=mustache: */}}
-
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
 {{- define "gorush.fullname" -}}
 {{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- $releases := .Release.Namespace | replace "jx-" "" |replace "anghami-" " " }}
+{{- printf "%s-%s" $releases $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

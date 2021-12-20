@@ -19,16 +19,16 @@ virtualService:
   #   Internet, office    private-gateway.prod    e.g. staging-gorush.office.angha.me
   #   VPC-only (AWS)      internal-gateway.prod   e.g. staging-gorush.internal.angha.me
   stagingGateway: private-gateway.prod
-  productionGateway: public-gateway.prod
+  productionGateway: internal-gateway.prod
   # Hostnames used in production.
-  # productionHosts:
-  # - something.anghami.com
-
+  productionHosts:
+  - gorush.angha.me
+  - gorush-test.angha.me
 autoscaler:
   enabled: false
-  minReplicas: 6
-  maxReplicas: 18
-  targetCpuAverageUtilization: 70
+  minReplicas: 5
+  maxReplicas: 120
+  targetCpuAverageUtilization: 40
 
 resources:
   requests:
@@ -40,17 +40,3 @@ resources:
 
 serviceMonitor:
   enabled: false
-
-# env:
-#   SOME_ENV_VAR: some-value
-
-# secrets:
-#   - from: "my-app-credentials" # secret's name in SecretsManager
-#     ## Choose either keyVal or plain, env or file.
-#     keyVal:
-#     - key: "my-db-password"         
-#       env: "MY_DB_PASSWORD"              # put value in env var
-#       # file: "/path/my_private_key.pem" # put value in file
-#     # plain:
-#     #   env: "MY_APP_CREDENTIALS"
-#     #   # file: "/path/my_app_credentials"

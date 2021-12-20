@@ -4,7 +4,7 @@ kind: ServiceMonitor
 metadata:
   name: {{ template "gorush.fullname" . }}
   labels:
-    release: promop
+    release: prometheus
 spec:
   endpoints:
   - interval: {{ .Values.serviceMonitor.interval }}

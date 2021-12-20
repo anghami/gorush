@@ -1,4 +1,5 @@
 {{- if .Values.autoscaler.enabled }}
+{{- if eq .Release.Namespace "jx-production" }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -16,5 +17,6 @@ spec:
     resource:
       name: cpu
       targetAverageUtilization: {{ .Values.autoscaler.targetCpuAverageUtilization }}
+{{- end }}
 {{- end }}
 {{- end }}
