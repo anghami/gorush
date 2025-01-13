@@ -17,15 +17,24 @@ func TestMissingFile(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestEmptyConfig(t *testing.T) {
+	conf, err := LoadConf("testdata/empty.yml")
+	if err != nil {
+		panic("failed to load config.yml from file")
+	}
+
+	assert.Equal(t, uint(100), conf.Ios.MaxConcurrentPushes)
+}
+
 type ConfigTestSuite struct {
 	suite.Suite
-	ConfGorushDefault ConfYaml
-	ConfGorush        ConfYaml
+	ConfGorushDefault *ConfYaml
+	ConfGorush        *ConfYaml
 }
 
 func (suite *ConfigTestSuite) SetupTest() {
 	var err error
-	suite.ConfGorushDefault, err = LoadConf("")
+	suite.ConfGorushDefault, err = LoadConf()
 	if err != nil {
 		panic("failed to load default config.yml")
 	}
@@ -46,6 +55,7 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 	assert.Equal(suite.T(), "release", suite.ConfGorushDefault.Core.Mode)
 	assert.Equal(suite.T(), false, suite.ConfGorushDefault.Core.Sync)
 	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Core.FeedbackURL)
+	assert.Equal(suite.T(), 0, len(suite.ConfGorushDefault.Core.FeedbackHeader))
 	assert.Equal(suite.T(), int64(10), suite.ConfGorushDefault.Core.FeedbackTimeout)
 	assert.Equal(suite.T(), false, suite.ConfGorushDefault.Core.SSL)
 	assert.Equal(suite.T(), "cert.pem", suite.ConfGorushDefault.Core.CertPath)
@@ -73,7 +83,8 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 
 	// Android
 	assert.Equal(suite.T(), true, suite.ConfGorushDefault.Android.Enabled)
-	assert.Equal(suite.T(), "YOUR_API_KEY", suite.ConfGorushDefault.Android.APIKey)
+	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Android.KeyPath)
+	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Android.Credential)
 	assert.Equal(suite.T(), 0, suite.ConfGorushDefault.Android.MaxRetry)
 
 	// iOS
@@ -83,9 +94,25 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 	assert.Equal(suite.T(), "pem", suite.ConfGorushDefault.Ios.KeyType)
 	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Ios.Password)
 	assert.Equal(suite.T(), false, suite.ConfGorushDefault.Ios.Production)
+	assert.Equal(suite.T(), uint(100), suite.ConfGorushDefault.Ios.MaxConcurrentPushes)
 	assert.Equal(suite.T(), 0, suite.ConfGorushDefault.Ios.MaxRetry)
 	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Ios.KeyID)
 	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Ios.TeamID)
+
+	// queue
+	assert.Equal(suite.T(), "local", suite.ConfGorushDefault.Queue.Engine)
+	assert.Equal(suite.T(), "127.0.0.1:4150", suite.ConfGorushDefault.Queue.NSQ.Addr)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.NSQ.Topic)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.NSQ.Channel)
+
+	assert.Equal(suite.T(), "127.0.0.1:4222", suite.ConfGorushDefault.Queue.NATS.Addr)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.NATS.Subj)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.NATS.Queue)
+
+	assert.Equal(suite.T(), "127.0.0.1:6379", suite.ConfGorushDefault.Queue.Redis.Addr)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.Redis.StreamName)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.Redis.Group)
+	assert.Equal(suite.T(), "gorush", suite.ConfGorushDefault.Queue.Redis.Consumer)
 
 	// log
 	assert.Equal(suite.T(), "string", suite.ConfGorushDefault.Log.Format)
@@ -94,9 +121,12 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 	assert.Equal(suite.T(), "stderr", suite.ConfGorushDefault.Log.ErrorLog)
 	assert.Equal(suite.T(), "error", suite.ConfGorushDefault.Log.ErrorLevel)
 	assert.Equal(suite.T(), true, suite.ConfGorushDefault.Log.HideToken)
+	assert.Equal(suite.T(), false, suite.ConfGorushDefault.Log.HideMessages)
 
 	assert.Equal(suite.T(), "memory", suite.ConfGorushDefault.Stat.Engine)
+	assert.Equal(suite.T(), false, suite.ConfGorushDefault.Stat.Redis.Cluster)
 	assert.Equal(suite.T(), "localhost:6379", suite.ConfGorushDefault.Stat.Redis.Addr)
+	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Stat.Redis.Username)
 	assert.Equal(suite.T(), "", suite.ConfGorushDefault.Stat.Redis.Password)
 	assert.Equal(suite.T(), 0, suite.ConfGorushDefault.Stat.Redis.DB)
 
@@ -105,6 +135,7 @@ func (suite *ConfigTestSuite) TestValidateConfDefault() {
 
 	assert.Equal(suite.T(), "bunt.db", suite.ConfGorushDefault.Stat.BuntDB.Path)
 	assert.Equal(suite.T(), "level.db", suite.ConfGorushDefault.Stat.LevelDB.Path)
+	assert.Equal(suite.T(), "badger.db", suite.ConfGorushDefault.Stat.BadgerDB.Path)
 
 	// gRPC
 	assert.Equal(suite.T(), false, suite.ConfGorushDefault.GRPC.Enabled)
@@ -122,6 +153,8 @@ func (suite *ConfigTestSuite) TestValidateConf() {
 	assert.Equal(suite.T(), false, suite.ConfGorush.Core.Sync)
 	assert.Equal(suite.T(), "", suite.ConfGorush.Core.FeedbackURL)
 	assert.Equal(suite.T(), int64(10), suite.ConfGorush.Core.FeedbackTimeout)
+	assert.Equal(suite.T(), 1, len(suite.ConfGorush.Core.FeedbackHeader))
+	assert.Equal(suite.T(), "x-gorush-token:4e989115e09680f44a645519fed6a976", suite.ConfGorush.Core.FeedbackHeader[0])
 	assert.Equal(suite.T(), false, suite.ConfGorush.Core.SSL)
 	assert.Equal(suite.T(), "cert.pem", suite.ConfGorush.Core.CertPath)
 	assert.Equal(suite.T(), "key.pem", suite.ConfGorush.Core.KeyPath)
@@ -148,7 +181,8 @@ func (suite *ConfigTestSuite) TestValidateConf() {
 
 	// Android
 	assert.Equal(suite.T(), true, suite.ConfGorush.Android.Enabled)
-	assert.Equal(suite.T(), "YOUR_API_KEY", suite.ConfGorush.Android.APIKey)
+	assert.Equal(suite.T(), "key.json", suite.ConfGorush.Android.KeyPath)
+	assert.Equal(suite.T(), "CREDENTIAL_JSON_DATA", suite.ConfGorush.Android.Credential)
 	assert.Equal(suite.T(), 0, suite.ConfGorush.Android.MaxRetry)
 
 	// iOS
@@ -158,6 +192,7 @@ func (suite *ConfigTestSuite) TestValidateConf() {
 	assert.Equal(suite.T(), "pem", suite.ConfGorush.Ios.KeyType)
 	assert.Equal(suite.T(), "", suite.ConfGorush.Ios.Password)
 	assert.Equal(suite.T(), false, suite.ConfGorush.Ios.Production)
+	assert.Equal(suite.T(), uint(100), suite.ConfGorush.Ios.MaxConcurrentPushes)
 	assert.Equal(suite.T(), 0, suite.ConfGorush.Ios.MaxRetry)
 	assert.Equal(suite.T(), "", suite.ConfGorush.Ios.KeyID)
 	assert.Equal(suite.T(), "", suite.ConfGorush.Ios.TeamID)
@@ -171,7 +206,9 @@ func (suite *ConfigTestSuite) TestValidateConf() {
 	assert.Equal(suite.T(), true, suite.ConfGorush.Log.HideToken)
 
 	assert.Equal(suite.T(), "memory", suite.ConfGorush.Stat.Engine)
+	assert.Equal(suite.T(), false, suite.ConfGorush.Stat.Redis.Cluster)
 	assert.Equal(suite.T(), "localhost:6379", suite.ConfGorush.Stat.Redis.Addr)
+	assert.Equal(suite.T(), "", suite.ConfGorush.Stat.Redis.Username)
 	assert.Equal(suite.T(), "", suite.ConfGorush.Stat.Redis.Password)
 	assert.Equal(suite.T(), 0, suite.ConfGorush.Stat.Redis.DB)
 
@@ -180,6 +217,7 @@ func (suite *ConfigTestSuite) TestValidateConf() {
 
 	assert.Equal(suite.T(), "bunt.db", suite.ConfGorush.Stat.BuntDB.Path)
 	assert.Equal(suite.T(), "level.db", suite.ConfGorush.Stat.LevelDB.Path)
+	assert.Equal(suite.T(), "badger.db", suite.ConfGorush.Stat.BadgerDB.Path)
 
 	// gRPC
 	assert.Equal(suite.T(), false, suite.ConfGorush.GRPC.Enabled)
@@ -197,6 +235,8 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	os.Setenv("GORUSH_IOS_KEY_ID", "ABC123DEFG")
 	os.Setenv("GORUSH_IOS_TEAM_ID", "DEF123GHIJ")
 	os.Setenv("GORUSH_API_HEALTH_URI", "/healthz")
+	os.Setenv("GORUSH_CORE_FEEDBACK_HOOK_URL", "http://example.com")
+	os.Setenv("GORUSH_CORE_FEEDBACK_HEADER", "x-api-key:1234567890 x-auth-key:0987654321")
 	ConfGorush, err := LoadConf("testdata/config.yml")
 	if err != nil {
 		panic("failed to load config.yml from file")
@@ -207,10 +247,13 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	assert.Equal(t, "ABC123DEFG", ConfGorush.Ios.KeyID)
 	assert.Equal(t, "DEF123GHIJ", ConfGorush.Ios.TeamID)
 	assert.Equal(t, "/healthz", ConfGorush.API.HealthURI)
+	assert.Equal(t, "http://example.com", ConfGorush.Core.FeedbackURL)
+	assert.Equal(t, "x-api-key:1234567890", ConfGorush.Core.FeedbackHeader[0])
+	assert.Equal(t, "x-auth-key:0987654321", ConfGorush.Core.FeedbackHeader[1])
 }
 
 func TestLoadWrongDefaultYAMLConfig(t *testing.T) {
 	defaultConf = []byte(`a`)
-	_, err := LoadConf("")
+	_, err := LoadConf()
 	assert.Error(t, err)
 }
