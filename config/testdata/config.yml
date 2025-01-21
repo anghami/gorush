@@ -8,7 +8,7 @@ core:
   max_notification: 100
   # set true if you need get error message from fail push notification in API response.
   # It only works when the queue engine is local.
-  sync: false
+  sync: true
   # set webhook url if you need get error message asynchronously from fail push notification in API response.
   feedback_hook_url: ""
   feedback_timeout: 10 # default is 10 second
@@ -45,8 +45,7 @@ api:
 
 android:
   enabled: true
-  key_path: "key.json"
-  credential: "CREDENTIAL_JSON_DATA"
+  key_path: "android_key.json"
   max_retry: 0 # resend fail notification, default value zero is disabled
 
 huawei:
@@ -72,24 +71,24 @@ queue:
     stream_name: gorush
 
 ios:
-  enabled: false
-  key_path: "key.pem"
+  enabled: true
+  key_path: "Certificates.p12"
   key_base64: "" # load iOS key from base64 input
-  key_type: "pem" # could be pem, p12 or p8 type
+  key_type: "p12" # could be pem, p12 or p8 type
   password: "" # certificate password, default as empty string.
-  production: false
+  production: true
   max_concurrent_pushes: 100 # just for push ios notification
   max_retry: 0 # resend fail notification, default value zero is disabled
   key_id: "" # KeyID from developer account (Certificates, Identifiers & Profiles -> Keys)
   team_id: "" # TeamID from developer account (View Account -> Membership)
 
 log:
-  format: "string" # string or json
-  access_log: "stdout" # stdout: output to console, or define log path like "log/access_log"
+  format: "json" # string or json
+  access_log: "/dev/null" # stdout: output to console, or define log path like "log/access_log"
   access_level: "debug"
   error_log: "stderr" # stderr: output to console, or define log path like "log/error_log"
   error_level: "error"
-  hide_token: true
+  hide_token: false
   hide_messages: false
 
 stat:
