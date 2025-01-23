@@ -2,6 +2,7 @@ syntax = "proto3";
 import "google/protobuf/struct.proto";
 
 package proto;
+option go_package = "./;proto";
 
 message Alert {
   string title = 1;
@@ -31,6 +32,16 @@ message NotificationRequest {
   string threadID = 12;
   bool mutableContent = 13;
   google.protobuf.Struct data = 14;
+  string image = 15;
+  enum Priority {
+    NORMAL = 0;
+    HIGH = 1;
+  }
+  Priority priority = 16;
+  string ID = 17;
+  string pushType = 18;
+  // default is production
+  bool development = 19;
 }
 
 message NotificationReply {

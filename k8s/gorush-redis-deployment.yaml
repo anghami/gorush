@@ -1,9 +1,14 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
   namespace: gorush
 spec:
+  selector:
+    matchLabels:
+      app: redis
+      role: master
+      tier: backend
   replicas: 1
   template:
     metadata:
@@ -13,7 +18,14 @@ spec:
         tier: backend
     spec:
       containers:
-      - name: master
-        image: redis
-        ports:
-        - containerPort: 6379
+        - name: master
+          image: redis:7
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
