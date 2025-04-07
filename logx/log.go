@@ -249,10 +249,27 @@ func LogPush(input *InputLog) LogPushEntry {
 
 	switch input.Status {
 	case core.SucceededPush:
-		LogAccess.Info(output)
+		logInfo(input, output)
 	case core.FailedPush:
-		LogError.Error(output)
+		logError(input, output)
 	}
 
 	return log
+}
+
+func makeEntry(logger *logrus.Logger, input *InputLog) *logrus.Entry {
+	fields := map[string]interface{} {
+		"error" : input.Error,
+		"id" 	: input.ID,
+	}
+
+	return logrus.NewEntry(logger).WithFields(fields)
+}
+
+func logError(input *InputLog, output string) {
+	makeEntry(LogError, input).Error(output)
+}
+
+func logInfo(input *InputLog, output string) {
+	makeEntry(LogAccess, input).Info(output)
 }
