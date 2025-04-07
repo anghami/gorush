@@ -240,7 +240,7 @@ Retry:
 	if err != nil {
 		newErr := fmt.Errorf("fcm service send message error: %v", err)
 		logx.LogError.Error(newErr)
-		errLog := logPush(cfg, core.FailedPush, "", req, newErr)
+		errLog := logPush(cfg, core.FailedPush, "", req, newErr, "")
 		resp.Logs = append(resp.Logs, errLog)
 		status.StatStorage.AddAndroidError(1)
 
@@ -265,12 +265,12 @@ Retry:
 
 		newResp := res.Responses[0]
 		if newResp.Success {
-			logPush(cfg, core.SucceededPush, to, req, nil)
+			logPush(cfg, core.SucceededPush, to, req, nil, "success")
 		}
 
 		if newResp.Error != nil {
 			// failure
-			errLog := logPush(cfg, core.FailedPush, to, req, newResp.Error)
+			errLog := logPush(cfg, core.FailedPush, to, req, newResp.Error, "")
 			resp.Logs = append(resp.Logs, errLog)
 			retryTopic = true
 		}
@@ -282,12 +282,12 @@ Retry:
 	var newTokens []string
 	for k, result := range res.Responses {
 		if result.Error != nil {
-			errLog := logPush(cfg, core.FailedPush, req.Tokens[k], req, result.Error)
+			errLog := logPush(cfg, core.FailedPush, req.Tokens[k], req, result.Error, "")
 			resp.Logs = append(resp.Logs, errLog)
 			newTokens = append(newTokens, req.Tokens[k])
 			continue
 		}
-		logPush(cfg, core.SucceededPush, req.Tokens[k], req, nil)
+		logPush(cfg, core.SucceededPush, req.Tokens[k], req, nil, "")
 	}
 
 	if len(newTokens) > 0 && retryCount < maxRetry {
@@ -306,7 +306,7 @@ Retry:
 	return resp, nil
 }
 
-func logPush(cfg *config.ConfYaml, status, token string, req *PushNotification, err error) logx.LogPushEntry {
+func logPush(cfg *config.ConfYaml, status, token string, req *PushNotification, err error, msg string) logx.LogPushEntry {
 	return logx.LogPush(&logx.InputLog{
 		ID:          req.ID,
 		Status:      status,
@@ -317,5 +317,5 @@ func logPush(cfg *config.ConfYaml, status, token string, req *PushNotification, 
 		HideToken:   cfg.Log.HideToken,
 		HideMessage: cfg.Log.HideMessages,
 		Format:      cfg.Log.Format,
-	})
+	}, msg)
 }

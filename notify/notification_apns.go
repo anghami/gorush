@@ -460,8 +460,14 @@ Retry:
 				}
 
 				// apns server error
-				errLog := logPush(cfg, core.FailedPush, token, req, err)
-				resp.Logs = append(resp.Logs, errLog)
+				switch res.Reason {
+				case apns2.ReasonBadDeviceToken, apns2.ReasonDeviceTokenNotForTopic:
+				default:
+					const logMsg = "failed to make push request"
+					errLog := logPush(cfg, core.FailedPush, token, req, err, logMsg)
+					resp.Logs = append(resp.Logs, errLog)
+				}
+				
 
 				status.StatStorage.AddIosError(1)
 				// We should retry only "retryable" statuses. More info about response:
@@ -472,7 +478,7 @@ Retry:
 			}
 
 			if res != nil && res.Sent() {
-				logPush(cfg, core.SucceededPush, token, req, nil)
+				logPush(cfg, core.SucceededPush, token, req, nil, "success")
 				status.StatStorage.AddIosSuccess(1)
 			}
 

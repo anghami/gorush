@@ -202,6 +202,7 @@ func routerEngine(cfg *config.ConfYaml, q *queue.Queue) *gin.Engine {
 		logger.WithSkipPath([]string{
 			cfg.API.HealthURI,
 			cfg.API.MetricURI,
+			cfg.API.PushURI,
 		}),
 	))
 	r.Use(gin.Recovery())
