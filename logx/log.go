@@ -51,7 +51,7 @@ func (input *LogPushEntry) LogInfo(msg string) {
 
 var isTerm bool
 
-// nolint
+//nolint
 func init() {
 	isTerm = isatty.IsTerminal(os.Stdout.Fd())
 }
