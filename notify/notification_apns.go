@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 
@@ -460,9 +461,9 @@ Retry:
 				}
 
 				// apns server error
-				switch res.Reason {
-				case apns2.ReasonBadDeviceToken, apns2.ReasonDeviceTokenNotForTopic:
-				default:
+				// we have a lot of tokens on db for each user that follow old formats and as such we end up flooding datadog.
+				badReasons := []string{apns2.ReasonBadDeviceToken, apns2.ReasonDeviceTokenNotForTopic}
+				if !slices.Contains(badReasons, res.Reason) {
 					const logMsg = "failed to make push request"
 					errLog := logPush(cfg, core.FailedPush, token, req, err, logMsg)
 					resp.Logs = append(resp.Logs, errLog)

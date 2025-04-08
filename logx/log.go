@@ -223,15 +223,14 @@ type InputLog struct {
 
 // LogPush record user push request and server response.
 func LogPush(input *InputLog, msg string) LogPushEntry {
-	var output string
 
 	entry := GetLogPushEntry(input)
 
 	switch input.Status {
 	case core.SucceededPush:
-		entry.LogInfo(output)
+		entry.LogInfo(msg)
 	case core.FailedPush:
-		entry.LogError(output)
+		entry.LogError(msg)
 	}
 
 	return entry

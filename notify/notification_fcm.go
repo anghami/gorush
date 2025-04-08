@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/appleboy/gorush/config"
 	"github.com/appleboy/gorush/core"
@@ -13,6 +14,10 @@ import (
 
 	"firebase.google.com/go/v4/messaging"
 	"github.com/appleboy/go-fcm"
+)
+
+const (
+	unavailableEntity = "Requested entity was not found."
 )
 
 func fileExists(filename string) bool {
@@ -222,6 +227,9 @@ func PushToAndroid(ctx context.Context, req *PushNotification, cfg *config.ConfY
 	client, err = InitFCMClient(ctx, cfg)
 
 Retry:
+	// we have a lot of tokens on db for each user that follow old formats and as such we end up flooding datadog.
+	const logMsg = "failed to make push request"
+	badReasons := []string{unavailableEntity}
 	messages := GetAndroidNotification(req)
 	if err != nil {
 		// FCM server error
@@ -240,7 +248,7 @@ Retry:
 	if err != nil {
 		newErr := fmt.Errorf("fcm service send message error: %v", err)
 		logx.LogError.Error(newErr)
-		errLog := logPush(cfg, core.FailedPush, "", req, newErr, "")
+		errLog := logPush(cfg, core.FailedPush, "", req, newErr, "something went wrong with fcm service")
 		resp.Logs = append(resp.Logs, errLog)
 		status.StatStorage.AddAndroidError(1)
 
@@ -269,9 +277,11 @@ Retry:
 		}
 
 		if newResp.Error != nil {
-			// failure
-			errLog := logPush(cfg, core.FailedPush, to, req, newResp.Error, "")
-			resp.Logs = append(resp.Logs, errLog)
+			// failure			
+			if !slices.Contains(badReasons, newResp.Error.Error()) {
+				errLog := logPush(cfg, core.FailedPush, to, req, newResp.Error, logMsg)
+				resp.Logs = append(resp.Logs, errLog)
+			}
 			retryTopic = true
 		}
 
@@ -281,13 +291,13 @@ Retry:
 
 	var newTokens []string
 	for k, result := range res.Responses {
-		if result.Error != nil {
-			errLog := logPush(cfg, core.FailedPush, req.Tokens[k], req, result.Error, "")
+		if result.Error != nil && !slices.Contains(badReasons, result.Error.Error()) {
+			errLog := logPush(cfg, core.FailedPush, req.Tokens[k], req, result.Error, logMsg)
 			resp.Logs = append(resp.Logs, errLog)
 			newTokens = append(newTokens, req.Tokens[k])
 			continue
 		}
-		logPush(cfg, core.SucceededPush, req.Tokens[k], req, nil, "")
+		logPush(cfg, core.SucceededPush, req.Tokens[k], req, nil, "success")
 	}
 
 	if len(newTokens) > 0 && retryCount < maxRetry {
