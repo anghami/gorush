@@ -1,0 +1,13 @@
+name: Preview
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  preview:
+    uses: anghami/pipelines/.github/workflows/preview.yaml@main
+    secrets: inherit
+    with:
+      run-tests: false
