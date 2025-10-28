@@ -1,6 +1,5 @@
 fullnameOverride: gorush
 
-
 image:
   repository: 339765050942.dkr.ecr.eu-west-1.amazonaws.com/anghami/gorush
 
