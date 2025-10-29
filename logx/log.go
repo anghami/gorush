@@ -1,9 +1,7 @@
 package logx
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -29,6 +27,26 @@ type LogPushEntry struct {
 	Token    string `json:"token"`
 	Message  string `json:"message"`
 	Error    string `json:"error"`
+}
+
+func (input *LogPushEntry) populateFields(logger *logrus.Logger) *logrus.Entry {
+	fields := map[string]interface{}{
+		"error":    input.Error,
+		"id":       input.ID,
+		"platform": input.Platform,
+		"type":     input.Type,
+		"token":    input.Token,
+	}
+
+	return logrus.NewEntry(LogError).WithFields(fields)
+}
+
+func (input *LogPushEntry) LogError(msg string) {
+	input.populateFields(LogError).Error(msg)
+}
+
+func (input *LogPushEntry) LogInfo(msg string) {
+	input.populateFields(LogAccess).Error(msg)
 }
 
 var isTerm bool
@@ -204,55 +222,16 @@ type InputLog struct {
 }
 
 // LogPush record user push request and server response.
-func LogPush(input *InputLog) LogPushEntry {
-	var platColor, resetColor, output string
+func LogPush(input *InputLog, msg string) LogPushEntry {
 
-	if isTerm {
-		platColor = colorForPlatForm(input.Platform)
-		resetColor = reset
-	}
-
-	log := GetLogPushEntry(input)
-
-	if input.Format == "json" {
-		logJSON, _ := json.Marshal(log)
-
-		output = string(logJSON)
-	} else {
-		var typeColor string
-		switch input.Status {
-		case core.SucceededPush:
-			if isTerm {
-				typeColor = green
-			}
-
-			output = fmt.Sprintf("|%s %s %s| %s%s%s [%s] %s",
-				typeColor, log.Type, resetColor,
-				platColor, log.Platform, resetColor,
-				log.Token,
-				log.Message,
-			)
-		case core.FailedPush:
-			if isTerm {
-				typeColor = red
-			}
-
-			output = fmt.Sprintf("|%s %s %s| %s%s%s [%s] | %s | Error Message: %s",
-				typeColor, log.Type, resetColor,
-				platColor, log.Platform, resetColor,
-				log.Token,
-				log.Message,
-				log.Error,
-			)
-		}
-	}
+	entry := GetLogPushEntry(input)
 
 	switch input.Status {
 	case core.SucceededPush:
-		LogAccess.Info(output)
+		entry.LogInfo(msg)
 	case core.FailedPush:
-		LogError.Error(output)
+		entry.LogError(msg)
 	}
 
-	return log
+	return entry
 }

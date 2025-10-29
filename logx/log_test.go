@@ -166,13 +166,13 @@ func TestLogPush(t *testing.T) {
 
 	in.Format = "json"
 	in.Status = "succeeded-push"
-	assert.Equal(t, "succeeded-push", LogPush(&in).Type)
+	assert.Equal(t, "succeeded-push", LogPush(&in, "success").Type)
 
 	in.Format = ""
 	in.Message = "success"
-	assert.Equal(t, "success", LogPush(&in).Message)
+	assert.Equal(t, "success", LogPush(&in, "success").Message)
 
 	in.Status = "failed-push"
 	in.Message = "failed"
-	assert.Equal(t, "failed", LogPush(&in).Message)
+	assert.Equal(t, "failed", LogPush(&in, "failed").Message)
 }

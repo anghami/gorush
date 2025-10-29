@@ -195,7 +195,7 @@ Retry:
 	res, err := client.SendMessage(ctx, notification)
 	if err != nil {
 		// Send Message error
-		errLog := logPush(cfg, core.FailedPush, req.Topic, req, err)
+		errLog := logPush(cfg, core.FailedPush, req.Topic, req, err, err.Error()) // Sending err.Error() as our message since we don't send notifications to Huawei API
 		resp.Logs = append(resp.Logs, errLog)
 		logx.LogError.Error("HMS server send message error: " + err.Error())
 		return resp, err
