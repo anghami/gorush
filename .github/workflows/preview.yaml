@@ -1,8 +1,10 @@
 name: Preview
+
 on:
   pull_request:
     branches:
-      - master    
+      - master
+
 jobs:
   preview:
     uses: anghami/pipelines/.github/workflows/preview.yaml@main
