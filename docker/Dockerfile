@@ -15,7 +15,7 @@ RUN adduser -D $USER
 RUN apk add --no-cache ca-certificates mailcap && \
   rm -rf /var/cache/apk/*
 
-COPY release/linux/amd64/gorush /bin/
+COPY release/${TARGETOS}/${TARGETARCH}/gorush /bin/
 
 USER $USER
 WORKDIR $HOME
